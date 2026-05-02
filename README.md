@@ -28,8 +28,9 @@ ai_medical_system/
 │   ├── js/
 │   │   └── app.js        # 前端逻辑
 │   └──sponsor.jpg
-└── templates/
-    └── index.html        # 主页面
+├── templates/
+│    └── index.html        # 主页面
+└──.env
 ```
 ## 技术栈
 
@@ -57,6 +58,13 @@ chmod +x start.sh
 ```cmd
 cd ai_medical_system
 start.bat
+```
+
+#### .env密钥修改：
+```
+以文本编辑模式进入.env
+OPENROUTER_API_KEY=你的密钥
+OPENROUTER_URL=密钥提供商的网址
 ```
 
 #### 手动安装:
