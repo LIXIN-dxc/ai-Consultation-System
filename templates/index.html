@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能医疗诊断系统</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 新增赞助相关样式 */
+        .sponsor-btn {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .sponsor-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalFade 0.3s ease-out;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #7f8c8d;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background-color: #f5f5f5;
+            color: #e74c3c;
+        }
+
+        .qr-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #eee;
+        }
+
+        .modal-text {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .donation-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .donation-info h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+
+        .donation-info ul {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+
+        .donation-info li {
+            margin-bottom: 8px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .modal-btn-secondary {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+
+        .modal-btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            .sponsor-btn {
+                right: 10px;
+                top: 10px;
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 赞助按钮 -->
+    <button class="sponsor-btn" id="sponsorBtn">
+        <i class="fas fa-heart"></i> 支持项目
+    </button>
+
+    <!-- 赞助二维码模态框 -->
+    <div class="modal-overlay" id="sponsorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">支持智能医疗诊断系统</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+
+            <p class="modal-text">
+                感谢您使用智能医疗诊断系统！您的支持将帮助我持续改进系统，提供更好的医疗健康服务。
+            </p>
+
+            <div>
+                <!-- 请将此处图片路径替换为您的实际二维码图片路径 -->
+                <img src="{{ url_for('static', filename='sponsor.jpg') }}" alt="赞助二维码" class="qr-image" id="qrImage">
+                <p>使用微信/支付宝扫描二维码支持我们</p>
+            </div>
+
+            <div class="donation-info">
+                <h4><i class="fas fa-info-circle"></i> 捐赠说明：</h4>
+                <ul>
+                    <li>所有捐赠将用于系统维护和功能开发</li>
+                    <li>单次捐赠金额不限，感谢您的每一份支持</li>
+                    <li>如有需要联系，qq号：2205333645</li>
+                </ul>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-primary" id="confirmBtn">
+                    <i class="fas fa-check"></i> 确认已支持
+                </button>
+                <button class="modal-btn modal-btn-secondary" id="closeBtn">
+                    稍后再说
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-hospital"></i>
+                    <h1>智能医疗诊断系统</h1>
+                </div>
+                <p class="subtitle">AI辅助医疗诊断平台</p>
+            </div>
+        </header>
+
+        <!-- 步骤导航 -->
+        <nav class="step-nav">
+            <div class="step-item active" data-step="1">
+                <span class="step-number">1</span>
+                <span class="step-text">免责声明</span>
+            </div>
+            <div class="step-item" data-step="2">
+                <span class="step-number">2</span>
+                <span class="step-text">基本信息</span>
+            </div>
+            <div class="step-item" data-step="3">
+                <span class="step-number">3</span>
+                <span class="step-text">症状选择</span>
+            </div>
+            <div class="step-item" data-step="4">
+                <span class="step-number">4</span>
+                <span class="step-text">AI问诊</span>
+            </div>
+            <div class="step-item" data-step="5">
+                <span class="step-number">5</span>
+                <span class="step-text">诊断报告</span>
+            </div>
+            <div class="step-item" data-step="6">
+                <span class="step-number">6</span>
+                <span class="step-text">导出</span>
+            </div>
+        </nav>
+
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <!-- 步骤1: 免责声明 -->
+            <section id="step1" class="step-content active">
+                <div class="section-header">
+                    <h2><i class="fas fa-exclamation-triangle"></i> 免责声明</h2>
+                </div>
+                <div class="disclaimer-box">
+                    <div class="warning-box">
+                        <h3><i class="fas fa-bell"></i> 重要提示</h3>
+                        <ul>
+                            <li>本系统提供的诊断建议仅供参考，不能替代专业医生的诊断和治疗</li>
+                            <li>如遇紧急情况（如胸痛、呼吸困难、严重出血等），请立即拨打急救电话或前往医院</li>
+                            <li>AI诊断存在局限性，最终诊断请以专业医疗机构为准</li>
+                            <li>本系统不会存储您的个人健康信息，所有数据仅在本次会话中使用</li>
+                            <li>使用本系统即表示您理解并同意以上条款</li>
+                        </ul>
+                    </div>
+                    <div class="agreement">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="agreeCheck">
+                            <span class="checkmark"></span>
+                            我已阅读并同意上述免责声明
+                        </label>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" id="btnStep1Next" disabled>
+                        同意并继续 <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 步骤2: 基本信息 -->
+            <section id="step2" class="step-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-user"></i> 基本信息与病史</h2>
+                </div>
+                <div class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>姓名</label>
+                            <input type="text" id="patientName" placeholder="请输入您的姓名">
+                        </div>
+                    </div>
+                    <div class="form-row two-col">
+                        <div class="form-group">
+                            <label>性别</label>
+                            <select id="patientGender">
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>年龄</label>
+                            <input type="number" id="patientAge" placeholder="请输入您的年龄" min="1" max="120">
+                        </div>
+                    </div>
+
+                    <!-- 过敏史 -->
+                    <div class="form-section-title">
+                        <i class="fas fa-allergies"></i> 过敏史（可多选）
+                    </div>
+                    <div class="tag-selector" id="allergySelector">
+                        <span class="tag" data-value="无已知过敏">无已知过敏</span>
+                        <span class="tag" data-value="青霉素过敏">青霉素过敏</span>
+                        <span class="tag" data-value="磺胺类药物过敏">磺胺类药物过敏</span>
+                        <span class="tag" data-value="阿司匹林过敏">阿司匹林过敏</span>
+                        <span class="tag" data-value="非甾体抗炎药过敏">非甾体抗炎药过敏</span>
+                        <span class="tag" data-value="造影剂过敏">造影剂过敏</span>
+                        <span class="tag" data-value="乳胶过敏">乳胶过敏</span>
+                        <span class="tag" data-value="食物过敏">食物过敏</span>
+                        <span class="tag" data-value="花粉过敏">花粉过敏</span>
+                        <span class="tag" data-value="尘螨过敏">尘螨过敏</span>
+                        <span class="tag" data-value="动物毛发过敏">动物毛发过敏</span>
+                        <span class="tag" data-value="过敏史不明">过敏史不明</span>
+                    </div>
+                    <div class="form-group">
+                        <label>其他过敏史（请详细说明）</label>
+                        <input type="text" id="otherAllergy" placeholder="如：对青霉素过敏、对海鲜过敏等">
+                    </div>
+
+                    <!-- 既往病史 -->
+                    <div class="form-section-title">
+                        <i class="fas fa-notes-medical"></i> 既往病史（可多选）
+                    </div>
+                    <div class="tag-selector" id="historySelector">
+                        <span class="tag" data-value="无特殊病史">无特殊病史</span>
+                        <span class="tag" data-value="高血压">高血压</span>
+                        <span class="tag" data-value="糖尿病">糖尿病</span>
+                        <span class="tag" data-value="心脏病">心脏病</span>
+                        <span class="tag" data-value="脑卒中">脑卒中</span>
+                        <span class="tag" data-value="哮喘">哮喘</span>
+                        <span class="tag" data-value="慢性阻塞性肺病">慢性阻塞性肺病</span>
+                        <span class="tag" data-value="肺结核">肺结核</span>
+                        <span class="tag" data-value="肝炎">肝炎</span>
+                        <span class="tag" data-value="肾脏疾病">肾脏疾病</span>
+                        <span class="tag" data-value="甲状腺疾病">甲状腺疾病</span>
+                        <span class="tag" data-value="贫血">贫血</span>
+                        <span class="tag" data-value="出血性疾病">出血性疾病</span>
+                        <span class="tag" data-value="肿瘤病史">肿瘤病史</span>
+                        <span class="tag" data-value="手术史">手术史</span>
+                        <span class="tag" data-value="精神疾病">精神疾病</span>
+                        <span class="tag" data-value="癫痫">癫痫</span>
+                        <span class="tag" data-value="痛风">痛风</span>
+                        <span class="tag" data-value="关节炎">关节炎</span>
+                        <span class="tag" data-value="骨质疏松">骨质疏松</span>
+                        <span class="tag" data-value="消化道溃疡">消化道溃疡</span>
+                        <span class="tag" data-value="胆结石">胆结石</span>
+                        <span class="tag" data-value="肾结石">肾结石</span>
+                    </div>
+                    <div class="form-group">
+                        <label>其他病史（请详细说明）</label>
+                        <input type="text" id="otherHistory" placeholder="如：五年前做过阑尾手术、有家族遗传病史等">
+                    </div>
+
+                    <!-- 当前用药情况 -->
+                    <div class="form-section-title">
+                        <i class="fas fa-pills"></i> 当前用药情况
+                    </div>
+                    <div class="form-group">
+                        <label>是否正在服用药物</label>
+                        <select id="takingMedication">
+                            <option value="">请选择</option>
+                            <option value="否">否</option>
+                            <option value="是">是</option>
+                        </select>
+                    </div>
+                    <div class="form-group medication-detail" style="display:none;">
+                        <label>请详细说明正在服用的药物</label>
+                        <input type="text" id="medicationDetail" placeholder="如：降压药、降糖药等">
+                    </div>
+
+                    <!-- 生活习惯 -->
+                    <div class="form-section-title">
+                        <i class="fas fa-heartbeat"></i> 生活习惯
+                    </div>
+                    <div class="form-row two-col">
+                        <div class="form-group">
+                            <label>吸烟史</label>
+                            <select id="smokingHistory">
+                                <option value="">请选择</option>
+                                <option value="从不吸烟">从不吸烟</option>
+                                <option value="已戒烟">已戒烟</option>
+                                <option value="偶尔吸烟">偶尔吸烟</option>
+                                <option value="经常吸烟">经常吸烟</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>饮酒史</label>
+                            <select id="drinkingHistory">
+                                <option value="">请选择</option>
+                                <option value="从不饮酒">从不饮酒</option>
+                                <option value="已戒酒">已戒酒</option>
+                                <option value="偶尔饮酒">偶尔饮酒</option>
+                                <option value="经常饮酒">经常饮酒</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-secondary" id="btnStep2Prev">
+                        <i class="fas fa-arrow-left"></i> 返回
+                    </button>
+                    <button class="btn btn-primary" id="btnStep2Next">
+                        下一步 <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 步骤3: 症状选择 -->
+            <section id="step3" class="step-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-stethoscope"></i> 症状选择</h2>
+                </div>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>请选择您出现症状的身体部位：</label>
+                        <div class="body-part-selector" id="bodyPartSelector">
+                            <button class="body-part-btn" data-part="头部"><i class="fas fa-brain"></i> 头部</button>
+                            <button class="body-part-btn" data-part="眼部"><i class="fas fa-eye"></i> 眼部</button>
+                            <button class="body-part-btn" data-part="耳部"><i class="fas fa-deaf"></i> 耳部</button>
+                            <button class="body-part-btn" data-part="鼻部"><i class="fas fa-head-side-cough"></i> 鼻部</button>
+                            <button class="body-part-btn" data-part="咽喉"><i class="fas fa-head-side-virus"></i> 咽喉</button>
+                            <button class="body-part-btn" data-part="胸部"><i class="fas fa-lungs"></i> 胸部</button>
+                            <button class="body-part-btn" data-part="心脏"><i class="fas fa-heart"></i> 心脏</button>
+                            <button class="body-part-btn" data-part="腹部"><i class="fas fa-apple-alt"></i> 腹部</button>
+                            <button class="body-part-btn" data-part="腰背"><i class="fas fa-hand-paper"></i> 腰背</button>
+                            <button class="body-part-btn" data-part="腰部"><i class="fas fa-bone"></i> 腰部</button>
+                            <button class="body-part-btn" data-part="四肢"><i class="fas fa-running"></i> 四肢</button>
+                            <button class="body-part-btn" data-part="关节"><i class="fas fa-arrows-alt"></i> 关节</button>
+                            <button class="body-part-btn" data-part="皮肤"><i class="fas fa-hand-sparkles"></i> 皮肤</button>
+                            <button class="body-part-btn" data-part="精神心理"><i class="fas fa-brain"></i> 精神心理</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>请选择您出现的症状（可多选）：</label>
+                        <div class="symptom-selector" id="symptomSelector">
+                            <!-- 动态生成症状选项 -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>症状详细描述（选填）</label>
+                        <textarea id="symptomDetail" rows="4" placeholder="请详细描述您的症状，包括：何时开始、持续时间、严重程度、诱发因素等"></textarea>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-secondary" id="btnStep3Prev">
+                        <i class="fas fa-arrow-left"></i> 返回
+                    </button>
+                    <button class="btn btn-primary" id="btnStep3Next">
+                        开始AI问诊 <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 步骤4: AI问诊 -->
+            <section id="step4" class="step-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-robot"></i> AI智能问诊</h2>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-status">
+                        <div class="status-info">
+                            <span class="status-label">问诊进度：</span>
+                            <span id="consultProgress">第 1 / 5 轮</span>
+                        </div>
+                        <div class="status-info">
+                            <span class="status-label">当前阶段：</span>
+                            <span id="consultPhase">基础问诊</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 20%"></div>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- 动态生成对话内容 -->
+                    </div>
+                    <div class="chat-input-area">
+                        <div class="input-group">
+                            <input type="text" id="chatInput" placeholder="请输入您的回答...">
+                            <button class="btn btn-primary" id="btnSendMessage">
+                                <i class="fas fa-paper-plane"></i> 发送
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-secondary" id="btnStep4Prev">
+                        <i class="fas fa-arrow-left"></i> 返回修改症状
+                    </button>
+                    <button class="btn btn-success" id="btnGenerateReport" style="display:none;">
+                        生成诊断报告 <i class="fas fa-file-medical"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 步骤5: 诊断报告 -->
+            <section id="step5" class="step-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-file-medical-alt"></i> AI诊断报告</h2>
+                </div>
+                <div class="report-container" id="reportContainer">
+                    <!-- 动态生成报告内容 -->
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-secondary" id="btnRestart">
+                        <i class="fas fa-redo"></i> 重新开始
+                    </button>
+                    <button class="btn btn-primary" id="btnExport">
+                        导出报告 <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 步骤6: 导出 -->
+            <section id="step6" class="step-content">
+                <div class="section-header">
+                    <h2><i class="fas fa-download"></i> 导出报告</h2>
+                </div>
+                <div class="export-container">
+                    <div class="export-options">
+                        <div class="export-option" data-format="txt">
+                            <i class="fas fa-file-alt"></i>
+                            <span>导出为文本文件</span>
+                        </div>
+                        <div class="export-option" data-format="json">
+                            <i class="fas fa-file-code"></i>
+                            <span>导出为JSON文件</span>
+                        </div>
+                    </div>
+                    <div class="export-preview" id="exportPreview">
+                        <!-- 预览内容 -->
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-secondary" id="btnStep6Prev">
+                        <i class="fas fa-arrow-left"></i> 返回报告
+                    </button>
+                </div>
+            </section>
+        </main>
+
+
+
+        <!-- 加载遮罩 -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>AI正在分析中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加赞助功能的JavaScript代码
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取相关元素
+            const sponsorBtn = document.getElementById('sponsorBtn');
+            const sponsorModal = document.getElementById('sponsorModal');
+            const closeModal = document.getElementById('closeModal');
+            const closeBtn = document.getElementById('closeBtn');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const qrImage = document.getElementById('qrImage');
+
+            // 二维码图片路径 - 请根据实际路径修改
+            const qrCodePath = "{{ url_for('static', filename='sponsor.jpg') }}";
+
+            // 设置二维码图片
+            qrImage.src = qrCodePath;
+
+            // 打开赞助模态框
+            sponsorBtn.addEventListener('click', function() {
+                sponsorModal.style.display = 'flex';
+                // 添加一个淡入动画
+                setTimeout(() => {
+                    sponsorModal.style.opacity = '1';
+                }, 10);
+            });
+
+            // 关闭赞助模态框
+            function closeSponsorModal() {
+                sponsorModal.style.opacity = '0';
+                setTimeout(() => {
+                    sponsorModal.style.display = 'none';
+                }, 300);
+            }
+
+            // 为所有关闭按钮添加事件
+            closeModal.addEventListener('click', closeSponsorModal);
+            closeBtn.addEventListener('click', closeSponsorModal);
+
+            // 点击模态框外部关闭
+            sponsorModal.addEventListener('click', function(e) {
+                if (e.target === sponsorModal) {
+                    closeSponsorModal();
+                }
+            });
+
+            // 确认按钮点击事件
+            confirmBtn.addEventListener('click', function() {
+                alert('感谢您的支持！您的贡献将帮助我们持续改进系统。');
+                closeSponsorModal();
+
+                // 这里可以添加跟踪捐赠确认的逻辑
+                // 例如：发送到服务器、记录到本地存储等
+                try {
+                    localStorage.setItem('sponsor_acknowledged', 'true');
+                } catch (e) {
+                    console.log('本地存储不可用');
+                }
+            });
+
+            // 检查二维码图片加载状态
+            qrImage.onerror = function() {
+                console.warn('赞助二维码图片加载失败，请检查路径: ' + qrCodePath);
+                qrImage.alt = '二维码图片加载失败，请检查图片路径';
+                qrImage.style.border = '2px dashed #ccc';
+                qrImage.style.padding = '20px';
+
+                // 创建备用二维码
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+                        <h4 style="color: #e74c3c;">二维码图片未找到</h4>
+                        <p>请确保赞助二维码图片已放置在以下路径：</p>
+                        <code style="background: #eee; padding: 5px 10px; border-radius: 4px; display: inline-block; margin: 10px 0;">
+                            ${qrCodePath}
+                        </code>
+                        <p>或联系系统管理员获取正确的二维码</p>
+                    </div>
+                `;
+                qrImage.parentNode.replaceChild(errorDiv, qrImage);
+            };
+
+            // 检查是否已确认过赞助，如果已确认，可以调整按钮样式
+            try {
+                if (localStorage.getItem('sponsor_acknowledged') === 'true') {
+                    sponsorBtn.innerHTML = '<i class="fas fa-heart"></i> 已支持';
+                    sponsorBtn.style.backgroundColor = '#27ae60';
+                    sponsorBtn.addEventListener('mouseenter', function() {
+                        sponsorBtn.style.backgroundColor = '#219653';
+                    });
+                    sponsorBtn.addEventListener('mouseleave', function() {
+                        sponsorBtn.style.backgroundColor = '#27ae60';
+                    });
+                }
+            } catch (e) {
+                console.log('无法访问本地存储');
+            }
+
+            // 添加键盘事件支持
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sponsorModal.style.display === 'flex') {
+                    closeSponsorModal();
+                }
+            });
+        });
+    </script>
+
+    <script src="static/js/app.js"></script>
+</body>
+</html>
