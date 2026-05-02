@@ -16,6 +16,9 @@ load_dotenv()
 
 # 从环境变量读取密钥
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY')
+OPENROUTER_URL = os.environ.get('OPENROUTER_URL')
+
+
 if not OPENROUTER_API_KEY:
     raise ValueError("未配置OPENROUTER_API_KEY环境变量")
 
@@ -26,9 +29,6 @@ CORS(app)
 # 存储会话历史（生产环境建议改用Redis/数据库）
 session_store = {}
 
-# OpenRouter API配置
-OPENROUTER_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
-OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY')
 
 
 def call_ai(messages, temperature=0.7):
